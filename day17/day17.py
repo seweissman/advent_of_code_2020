@@ -13,7 +13,7 @@ def adj_list_offset(n, l=None):
 
 
 def adj_list(c, l=None):
-    """Return a generator with offsets"""
+    """Return a generator with all coords adjacent to c (including c)"""
     if l is None:
         l = [()]
     if len(c) == 0:
@@ -23,7 +23,7 @@ def adj_list(c, l=None):
 
 
 def range_coord(c_min, c_max, l=None):
-    """Return a generator with offsets"""
+    """Return a generator with all coords between c_min and c_max"""
     if l is None:
         l = [()]
     if len(c_min) == 0:
