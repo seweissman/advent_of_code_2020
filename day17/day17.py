@@ -1,6 +1,7 @@
 
 from collections import defaultdict
 
+
 def adj_list_offset(n, l=None):
     """Return a generator with offsets"""
     if l is None:
@@ -41,6 +42,7 @@ def count_active_neighbors(state, c):
 
     return active_ct
 
+
 def get_range(state, n):
     min_range = [None for i in range(0, n)]
     max_range = [None for i in range (0, n)]
@@ -52,11 +54,13 @@ def get_range(state, n):
                 max_range[i] = c[i]
     return min_range, max_range
 
+
 def print_state(state, n):
     min_range, max_range = get_range(state, n)
     for c in range_coord(min_range[2:], max_range[2:]):
         print(f"c={c}")
         print_2d_state(state,min_range[0:2], max_range[0:2],c)
+
 
 def print_2d_state(state, min_range, max_range, c=()):
     line = ["." for i in range(max_range[0] - min_range[0]+1)]
@@ -65,8 +69,10 @@ def print_2d_state(state, min_range, max_range, c=()):
         lines[d[1]][d[0]] = state[d+c]
     print("\n".join(["".join(line) for line in lines]))
 
+
 def count_active(state):
     return len([v for v in state.values() if v == "#"])
+
 
 def step(state):
     seen = set()
@@ -101,8 +107,10 @@ if __name__ == "__main__":
     print_state(state, 3)
     for n in range(0, 6):
         state = step(state)
+        # print_state(state, 3)
         print(f"After {n+1} cycles:")
         print(count_active(state))
+    # The printed state doesn't match the example but we are getting the right answer...
 
     # part 2
 
