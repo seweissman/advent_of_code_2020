@@ -1,3 +1,5 @@
+from collections import Iterable
+
 
 class OrList(list):
     def __repr__(self):
@@ -14,6 +16,9 @@ class OrList(list):
 class AndList(list):
     def __repr__(self):
         return "(and " + super().__repr__() + ")"
+
+    def and_concat(self, other_list):
+        return AndList(super().__add__(other_list))
 
     def copy(self):
         return AndList(super().copy())
@@ -36,7 +41,7 @@ def search_rule(rules, rule, input, rule_rest=None, i=0):
     if i >= len(input) and not rule and not rule_rest:
         return True
     if type(rule) is AndList and len(rule) == 0:
-        if rule_rest == []:
+        if not rule_rest:
             return True
         return search_rule(rules, rule_rest[0], input, rule_rest=rule_rest[1:], i=i)
     if type(rule) is OrList and len(rule) == 0:
@@ -52,16 +57,11 @@ def search_rule(rules, rule, input, rule_rest=None, i=0):
                 return False
             return input[i].startswith(rule) and search_rule(rules, rule_rest, input, i=i+len(rule))
     if type(rule) is OrList:
-        is_match = search_rule(rules, rule[0], input, rule_rest=rule_rest, i=i)
-        if is_match:
-            return True
-        else:
-            return search_rule(rules, OrList(rule[1:]), input, rule_rest=rule_rest, i=i)
+        return (search_rule(rules, rule[0], input, rule_rest=rule_rest, i=i) or
+                search_rule(rules, rule[1:], input, rule_rest=rule_rest, i=i))
     if type(rule) is AndList:
-        if rule_rest and len(rule) > 1:
-            rule_rest = AndList([rule[1:], rule_rest])
-        if not rule_rest and len(rule) > 1:
-            rule_rest = rule[1:]
+        if len(rule) > 1:
+            rule_rest = rule[1:].and_concat(rule_rest)
         return search_rule(rules, rule[0], input, rule_rest=rule_rest, i=i)
 
 
