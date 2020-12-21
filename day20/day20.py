@@ -12,7 +12,6 @@ SEA_MONSTER = """
 """
 SEA_MONSTER = SEA_MONSTER[1:]
 
-
 def opposite_dir(d):
     return DIRS[(DIRS.index(d) + 2)%4]
 
@@ -92,6 +91,29 @@ def test_tile():
     assert(tile.south() == "##.")
     assert(tile.west() == "#.#")
     assert(tile.north() == "#..")
+
+def check_grid(grid):
+    for y in range(0, len(grid)):
+        for x in range(0, len(grid)):
+            tile = tiles[grid[y,x]]
+            for d in DIRS:
+                if d == "e":
+                    newx = x + 1
+                    newy = y
+                elif d == "w":
+                    newx = x - 1
+                    newy = y
+                elif d == "n":
+                    newx = x
+                    newy = y - 1
+                elif d == "s":
+                    newx = x
+                    newy = y + 1
+                if 0 <= newx < len(grid) and 0 <= newy < len(grid):
+                    other_tile = tiles[grid[newy, newx]]
+                    edge1 = tile.get_edge(d)
+                    edge2 = other_tile.get_edge(opposite_dir(d))
+                    assert(edge1 == edge2)
 
 
 def check_monster(grid, monster_array):
@@ -258,31 +280,9 @@ if __name__ == "__main__":
 
     print(tile_grid)
     # check tile grid
-    for y in range(0, len(tile_grid)):
-        for x in range(0, len(tile_grid)):
-            tile = tiles[tile_grid[y,x]]
-            for d in DIRS:
-                if d == "e":
-                    newx = x + 1
-                    newy = y
-                elif d == "w":
-                    newx = x - 1
-                    newy = y
-                elif d == "n":
-                    newx = x
-                    newy = y - 1
-                elif d == "s":
-                    newx = x
-                    newy = y + 1
-                if 0 <= newx < len(tile_grid) and 0 <= newy < len(tile_grid):
-                    other_tile = tiles[tile_grid[newy, newx]]
-                    edge1 = tile.get_edge(d)
-                    edge2 = other_tile.get_edge(opposite_dir(d))
-                    if edge1 != edge2:
-                        print(f"Error at y={y} {newy}, x={x} {newx} d={d} {tile.num} {other_tile.num}")
-                        print(f"{edge1} {edge2}")
+    check_grid(tile_grid)
 
-
+    # Build the full grid
     sea_grid = None
     for y in range(0,len(tile_grid)):
         sea_grid_row = None
@@ -292,12 +292,12 @@ if __name__ == "__main__":
                 sea_grid_row = tile.data[1:-1,1:-1]
                 continue
             sea_grid_row = np.concatenate((sea_grid_row, tile.data[1:-1,1:-1]), axis=1)
-        #print("row:", sea_grid_row, "<<<")
         if sea_grid is None:
             sea_grid = sea_grid_row
             continue
         sea_grid = np.concatenate((sea_grid, sea_grid_row), axis=0)
 
+    # Read in the sea monster to an array or coords so we can efficiently shift it around to search
     sea_monster_lines = SEA_MONSTER.split("\n")[:-1]
     sea_monster_coords = []
     for y in range(0, len(sea_monster_lines)):
@@ -307,33 +307,23 @@ if __name__ == "__main__":
                 sea_monster_coords += [(y, x)]
     sea_monster_array = np.array(sea_monster_coords)
 
+    # Try all permuations of the grid and see which ones have sea monsters
     for k in range(4):
         for op in [None, np.fliplr, np.flipud]:
             test_grid = np.rot90(sea_grid, k=k)
             if op is not None:
-                test_grid = op(test_grid)
+                test_grid = op(test_grid).copy()
             sea_monster_count = 0
             for y in range(0,len(sea_grid)):
                 for x in range(0, len(sea_grid)):
                     sea_monster_test_array = sea_monster_array + [y, x]
                     if check_monster(test_grid, sea_monster_test_array):
+                        for c in sea_monster_test_array:
+                            test_grid[tuple(c)] = "."
                         sea_monster_count += 1
             print(k, op, sea_monster_count)
-
-    sea_monster_count = 0
-    # We figured out that this is the right rotation in the last block
-    test_grid = np.flipud(np.rot90(sea_grid))
-    for y in range(0,len(sea_grid)):
-        for x in range(0, len(sea_grid)):
-            sea_monster_test_array = sea_monster_array + [y, x]
-            if check_monster(test_grid, sea_monster_test_array):
-                for c in sea_monster_test_array:
-                    test_grid[tuple(c)] = "."
-                sea_monster_count += 1
-    print("Sea monster count:", sea_monster_count)
-    unique, counts = np.unique(test_grid, return_counts=True)
-    print(unique, counts)
-
+            unique, counts = np.unique(test_grid, return_counts=True)
+            print(unique, counts)
 
 """
 [[1291 1009 2389 3671 1627 3137 1601 2803 1621 1039 3373 1213]
