@@ -14,7 +14,7 @@ def recursive_combat(decks):
             return 0
         if str(decks) in seen_decks:
             #print("Seen decks", decks)
-            return 0 # player 1 in winner
+            return 0 # recursion break: player 1 in winner
         seen_decks.add(str(decks))
         combat_cards = [deck.popleft() for deck in decks]
         # for i in range(2):
