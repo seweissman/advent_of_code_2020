@@ -7,14 +7,9 @@ REVERSE_DIRS = ["sw", "se", "nw", "ne", "w", "e"]
 def reverse(dir):
     return REVERSE_DIRS[DIRS.index(dir)]
 
-
 class HexTile:
-    ct = 0
-    tile_list = []
-    ref_tile = None
-    tiles_to_set = None
-
-    def __init__(self):
+    """Represents a single hexagonal tile"""
+    def __init__(self, id):
         self.nw = None
         self.ne = None
         self.e = None
@@ -22,24 +17,21 @@ class HexTile:
         self.se = None
         self.sw = None
         self.color = "white"
-        self.id = HexTile.ct
-        if HexTile.ct == 0:
-            HexTile.ref_tile = self
-            HexTile.tiles_to_set = deque([HexTile.ref_tile])
-
-        HexTile.ct += 1
-        HexTile.tile_list.append(self)
+        self.id = id
 
     def get_tile(self, dir):
+        """Get adjacent tile in the given direction"""
         tile = self.__getattribute__(dir)
         return tile
 
     def set_tile(self, dir, tile):
+        """Set tile in the given direction to the given tile"""
         self.__setattr__(dir, tile)
         rev_dir = reverse(dir)
         tile.__setattr__(rev_dir, self)
 
     def flip(self):
+        """File tile color. If black tile while be white, if white tile will be black"""
         if self.color == "white":
             self.color = "black"
         else:
@@ -49,7 +41,28 @@ class HexTile:
         return f"HexTile({self.color})"
 
     def adj_tiles(self):
+        """Return list of all adjacent tiles"""
         return [self.get_tile(dir) for dir in DIRS]
+
+
+class HexGrid:
+    ct = 0
+    tile_list = []
+    ref_tile = None
+    tiles_to_set = None
+
+    @classmethod
+    def make_tile(cls):
+        tile = HexTile(cls.ct)
+        cls.tile_list.append(tile)
+        cls.tiles_to_set.append(tile)
+        cls.ct += 1
+        return tile
+
+    @classmethod
+    def init(cls):
+        cls.tiles_to_set = deque()
+        cls.ref_tile = cls.make_tile()
 
     @classmethod
     def count_black(cls):
@@ -112,7 +125,7 @@ class HexTile:
                 i = i + 1
             # print(dir)
             new_tile = curr_tile.get_tile(dir)
-            if new_tile is None:
+            while new_tile is None:
                 cls.grow_grid(1000)
                 new_tile = curr_tile.get_tile(dir)
             assert (new_tile is not None)
@@ -128,43 +141,37 @@ class HexTile:
 
             ne_tile = ref_tile.get_tile("ne")
             if not ne_tile:
-                ne_tile = HexTile()
+                ne_tile = cls.make_tile()
                 ref_tile.set_tile("ne", ne_tile)
-                cls.tiles_to_set.append(ne_tile)
 
             e_tile = ref_tile.get_tile("e")
             if not e_tile:
-                e_tile = HexTile()
+                e_tile = cls.make_tile()
                 ref_tile.set_tile("e", e_tile)
-                cls.tiles_to_set.append(e_tile)
             ne_tile.set_tile("se", e_tile)
 
             se_tile = ref_tile.get_tile("se")
             if not se_tile:
-                se_tile = HexTile()
+                se_tile = cls.make_tile()
                 ref_tile.set_tile("se", se_tile)
-                cls.tiles_to_set.append(se_tile)
             e_tile.set_tile("sw", se_tile)
 
             sw_tile = ref_tile.get_tile("sw")
             if not sw_tile:
-                sw_tile = HexTile()
+                sw_tile = cls.make_tile()
                 ref_tile.set_tile("sw", sw_tile)
-                cls.tiles_to_set.append(sw_tile)
             se_tile.set_tile("w", sw_tile)
 
             w_tile = ref_tile.get_tile("w")
             if not w_tile:
-                w_tile = HexTile()
+                w_tile = cls.make_tile()
                 ref_tile.set_tile("w", w_tile)
-                cls.tiles_to_set.append(w_tile)
             sw_tile.set_tile("nw", w_tile)
 
             nw_tile = ref_tile.get_tile("nw")
             if not nw_tile:
-                nw_tile = HexTile()
+                nw_tile = cls.make_tile()
                 ref_tile.set_tile("nw", nw_tile)
-                cls.tiles_to_set.append(nw_tile)
 
             w_tile.set_tile("ne", nw_tile)
             nw_tile.set_tile("e", ne_tile)
@@ -172,35 +179,35 @@ class HexTile:
 
 
 if __name__ == "__main__":
-    with open("input-test.txt") as input:
+    with open("input.txt") as input:
         lines = input.readlines()
         lines = [line.strip() for line in lines]
 
     # We need to create one time to start. Could probably change the class to make this better.
-    ref_tile = HexTile()
+    HexGrid.init()
 
     # Some sanity checks
-    tile = HexTile.find_tile("nwse")
-    assert(tile.id == ref_tile.id)
-    tile = HexTile.find_tile("nwwswee")
-    assert(tile.id == ref_tile.id)
+    tile = HexGrid.find_tile("nwse")
+    assert(tile == HexGrid.ref_tile)
+    tile = HexGrid.find_tile("nwwswee")
+    assert(tile == HexGrid.ref_tile)
 
     # Part 1
     for line in lines:
         i = 0
-        tile = HexTile.find_tile(line)
+        tile = HexGrid.find_tile(line)
         tile.flip()
 
-    print("Answer: ", HexTile.count_black())
+    print("Answer: ", HexGrid.count_black())
 
     # part 2
 
     i = 0
     while i < 100:
-        HexTile.change_grid()
+        HexGrid.change_grid()
         i += 1
         if i % 10 == 0:
             print(i)
 
-    print("Day 100: ", HexTile.count_black())
+    print("Day 100: ", HexGrid.count_black())
 
