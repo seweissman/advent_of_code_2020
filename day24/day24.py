@@ -61,6 +61,17 @@ class HexTile:
 
     @classmethod
     def change_grid(cls):
+        # grow grid if necessary
+        while True:
+            do_grow = False
+            for tile in cls.tile_list:
+                if tile.color == "black" and None in tile.adj_tiles():
+                    do_grow = True
+            if do_grow:
+                cls.grow_grid(1000)
+            else:
+                break
+
         # Save the current grid state in a map so we can make our changes
         # in place
         tile_color_map = {}
@@ -101,6 +112,9 @@ class HexTile:
                 i = i + 1
             # print(dir)
             new_tile = curr_tile.get_tile(dir)
+            if new_tile is None:
+                cls.grow_grid(1000)
+                new_tile = curr_tile.get_tile(dir)
             assert (new_tile is not None)
             curr_tile = new_tile
         return curr_tile
@@ -157,98 +171,13 @@ class HexTile:
             n -= 1
 
 
-def build_grid(start_tile, n):
-    """
-    Build a grid of n tile starting from start_tile and moving outward in
-    a circle
-    """
-    tiles_to_set = deque([start_tile])
-    while True:
-        if n == 0:
-            return
-        ref_tile = tiles_to_set.popleft()
-
-        ne_tile = ref_tile.get_tile("ne")
-        if not ne_tile:
-            ne_tile = HexTile()
-            ref_tile.set_tile("ne", ne_tile)
-            tiles_to_set.append(ne_tile)
-
-        e_tile = ref_tile.get_tile("e")
-        if not e_tile:
-            e_tile = HexTile()
-            ref_tile.set_tile("e", e_tile)
-            tiles_to_set.append(e_tile)
-        ne_tile.set_tile("se", e_tile)
-
-        se_tile = ref_tile.get_tile("se")
-        if not se_tile:
-            se_tile = HexTile()
-            ref_tile.set_tile("se", se_tile)
-            tiles_to_set.append(se_tile)
-        e_tile.set_tile("sw", se_tile)
-
-        sw_tile = ref_tile.get_tile("sw")
-        if not sw_tile:
-            sw_tile = HexTile()
-            ref_tile.set_tile("sw", sw_tile)
-            tiles_to_set.append(sw_tile)
-        se_tile.set_tile("w", sw_tile)
-
-        w_tile = ref_tile.get_tile("w")
-        if not w_tile:
-            w_tile = HexTile()
-            ref_tile.set_tile("w", w_tile)
-            tiles_to_set.append(w_tile)
-        sw_tile.set_tile("nw", w_tile)
-
-        nw_tile = ref_tile.get_tile("nw")
-        if not nw_tile:
-            nw_tile = HexTile()
-            ref_tile.set_tile("nw", nw_tile)
-            tiles_to_set.append(nw_tile)
-
-        w_tile.set_tile("ne", nw_tile)
-        nw_tile.set_tile("e", ne_tile)
-        n -= 1
-
-
-
-
-def find_tile(ref_tile, dir_str):
-    """
-    Given a direction string, e.g. wenwwweseeeweswwwnwwe, and a starting tile, return
-    tile in the grid we are on after following the directions.
-    """
-    i = 0
-    curr_tile = ref_tile
-    while i < len(dir_str):
-        if dir_str[i] == "s" or dir_str[i] == "n":
-            dir = dir_str[i:i + 2]
-            i = i + 2
-        else:
-            dir = dir_str[i]
-            i = i + 1
-        #print(dir)
-        new_tile = curr_tile.get_tile(dir)
-        assert(new_tile is not None)
-        curr_tile = new_tile
-    return curr_tile
-
-
 if __name__ == "__main__":
-    with open("input.txt") as input:
+    with open("input-test.txt") as input:
         lines = input.readlines()
         lines = [line.strip() for line in lines]
 
+    # We need to create one time to start. Could probably change the class to make this better.
     ref_tile = HexTile()
-    #ref_tile = HexTile()
-
-    #tile_list = deque([ref_tile])
-    # After a bit of experimenting we determine that this size grid is big enough
-    # to solve the puzzle. For a bigger puzzle we'd have to increase the size of the grid
-    HexTile.grow_grid(15000)
-    #build_grid(ref_tile, 15000)
 
     # Some sanity checks
     tile = HexTile.find_tile("nwse")
