@@ -46,6 +46,7 @@ class HexTile:
 
 
 class HexGrid:
+    """Represents a hexagonal grid"""
     ct = 0
     tile_list = []
     ref_tile = None
