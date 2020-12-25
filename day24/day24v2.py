@@ -34,6 +34,15 @@ def find_tile(dir_str):
       nw  ne
     w   x   e
       sw  se
+
+    We use an offset/zigzag coordinate system like follows, positions in the same y column
+    are highlighted with parens:
+     -1,2  (0,2)   1,2
+        (0,1)   1,1
+    -1,0   (0,0)   1,0
+        (0,-1)  1,-1
+    -1,-2  (0,-2)  1,-2
+
     """
     x = y = 0
     i = 0
@@ -45,7 +54,6 @@ def find_tile(dir_str):
         else:
             dir = dir_str[i]
             i = i + 1
-
         if dir == "nw":
             if y % 2 == 1:
                 x -= 1
